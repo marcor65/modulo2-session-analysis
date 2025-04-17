@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Session Analysis – Module 2</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background-color: #cceeff;
@@ -36,24 +35,26 @@
     .section {
       margin-bottom: 30px;
     }
-    .chart-container {
-      width: 100%;
-      max-width: 600px;
-      margin-top: 20px;
+    .reference-time-container, .lap-time-container {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 2px solid #0077cc;
+      background-color: #f9f9f9;
     }
-    .result-label {
+    .reference-time-container label,
+    .lap-time-container label {
       font-weight: bold;
-      margin-top: 15px;
     }
-    button.analyze {
+    .section button {
       font-weight: bold;
       text-transform: uppercase;
       background-color: green;
       color: white;
+      width: auto;
+      margin-top: 10px;
     }
-    button.analyzed {
-      background-color: blue;
-      color: white;
+    button.reset {
+      background-color: red;
     }
     .highlighted-line {
       font-weight: bold;
@@ -65,6 +66,19 @@
       margin-bottom: 5px;
       font-style: italic;
     }
+    .scart-text {
+      font-size: 12px;
+      color: #ff0000;
+    }
+    /* Mobile Friendly */
+    @media (max-width: 600px) {
+      .time-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .section button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -72,31 +86,42 @@
 
   <div class="section">
     <h2>Session 2</h2>
-    <div class="instruction-text">Enter up to 20 lap times in 6-digit format (e.g. 123456 = 1:23.456). Seconds max: 59</div>
-    <label>Reference Time (mssmmm):</label>
-    <input id="refTime2" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
-    <div id="session2Times" class="time-grid"></div>
+    <div class="reference-time-container">
+      <div class="instruction-text">Enter the reference lap time (m:ss.mmm) for Session 2.</div>
+      <label>Reference Time (mssmmm):</label>
+      <input id="refTime2" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
+    </div>
+    <div class="lap-time-container">
+      <div class="instruction-text">Enter up to 20 lap times (m:ss.mmm) for Session 2.</div>
+      <div id="session2Times" class="time-grid"></div>
+    </div>
     <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
+    <button class="reset" onclick="resetSession('session2')">RESET SESSION</button>
     <div id="session2Result"></div>
     <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
-    <div class="chart-container"><canvas id="chart2"></canvas></div>
   </div>
 
   <div class="section">
     <h2>Session 3</h2>
-    <div class="instruction-text">Enter up to 20 lap times in 6-digit format (e.g. 123456 = 1:23.456). Seconds max: 59</div>
-    <label>Reference Time (mssmmm):</label>
-    <input id="refTime3" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
-    <div id="session3Times" class="time-grid"></div>
+    <div class="reference-time-container">
+      <div class="instruction-text">Enter the reference lap time (m:ss.mmm) for Session 3.</div>
+      <label>Reference Time (mssmmm):</label>
+      <input id="refTime3" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
+    </div>
+    <div class="lap-time-container">
+      <div class="instruction-text">Enter up to 20 lap times (m:ss.mmm) for Session 3.</div>
+      <div id="session3Times" class="time-grid"></div>
+    </div>
     <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
+    <button class="reset" onclick="resetSession('session3')">RESET SESSION</button>
     <div id="session3Result"></div>
     <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
-    <div class="chart-container"><canvas id="chart3"></canvas></div>
   </div>
 
   <div class="section">
     <h2>Final Results</h2>
     <p class="result-label">Total Delta (Session 2 + 3): <span id="totalSum">-</span> ms</p>
+    <button class="reset" onclick="resetAll()">RESET ALL</button>
   </div>
 
   <script>
@@ -181,6 +206,11 @@
         input.style.fontWeight = isBest ? 'bold' : 'normal';
         const div = document.createElement('div');
         div.textContent = input.value;
+        const scartDiv = document.createElement('div');
+        const delta = best5.find(d => d.index === idx)?.delta || 0;
+        scartDiv.textContent = `Delta: ${delta} ms`;
+        scartDiv.classList.add('scart-text');
+        div.appendChild(scartDiv);
         if (isBest) div.classList.add('highlighted-line');
         resultEl.appendChild(div);
       });
@@ -189,28 +219,19 @@
       document.getElementById(`${session}Sum`).textContent = sum;
       sessionSums[session] = sum;
       document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
+    }
 
-      const ctx = document.getElementById(`chart${session.slice(-1)}`).getContext('2d');
-      if (window[`chart${session}`]) window[`chart${session}`].destroy();
-      window[`chart${session}`] = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: best5.map(d => `Lap ${d.index + 1}`),
-          datasets: [{
-            label: 'Delta (ms)',
-            backgroundColor: '#0077cc',
-            data: best5.map(d => d.delta)
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true } }
-        }
-      });
+    function resetSession(session) {
+      document.getElementById(`refTime${session.slice(-1)}`).value = '';
+      const container = document.getElementById(`${session}Times`);
+      container.querySelectorAll('input').forEach(input => input.value = '');
+      document.getElementById(`${session}Result`).innerHTML = '';
+      document.getElementById(`${session}Sum`).textContent = '-';
+    }
 
-      const btn = document.getElementById(`btn${session.slice(-1)}`);
-      btn.classList.remove('analyze');
-      btn.classList.add('analyzed');
+    function resetAll() {
+      ['session2', 'session3'].forEach(resetSession);
+      document.getElementById('totalSum').textContent = '-';
     }
   </script>
 </body>
