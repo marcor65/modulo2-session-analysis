@@ -67,8 +67,11 @@
       margin-top: 10px;
     }
     .highlighted-line {
-      font-weight: bold;
+      font-weight: normal;
       display: block;
+    }
+    .highlighted-line.bold {
+      font-weight: bold;
     }
     .instruction-text {
       font-size: 14px;
@@ -202,7 +205,7 @@
       });
 
       deltas.sort((a, b) => a.delta - b.delta);
-      const best5 = deltas.slice(0, 5);
+      const best5 = deltas.slice(0, 5); // I migliori 5 tempi da evidenziare
 
       const resultEl = document.getElementById(`${session}Result`);
       resultEl.innerHTML = ''; // reset precedente output
@@ -222,9 +225,9 @@
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
 
-          // Evidenziamento in grassetto solo nel riepilogo
+          // Evidenzio in grassetto solo i 5 migliori tempi
           if (best5.some(item => item.index === idx)) {
-            resultLine.style.fontWeight = 'bold'; // evidenziare in grassetto solo nel riepilogo
+            resultLine.classList.add('bold'); // evidenzio in grassetto solo i 5 migliori tempi
           }
 
           resultLine.appendChild(lapText);
