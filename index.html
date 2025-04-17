@@ -66,16 +66,6 @@
       background-color: red;
       margin-top: 10px;
     }
-    .highlighted-line {
-      font-weight: bold;
-      display: block;
-    }
-    .instruction-text {
-      font-size: 14px;
-      color: #333;
-      margin-bottom: 5px;
-      font-style: italic;
-    }
     .delta-text {
       font-size: 12px;
       font-weight: bold;
@@ -201,40 +191,35 @@
         }
       });
 
-      // Sort by delta and take the best 5
       deltas.sort((a, b) => a.delta - b.delta);
       const best5 = deltas.slice(0, 5);
+      const best5Indices = best5.map(d => d.index);
 
       const resultEl = document.getElementById(`${session}Result`);
       resultEl.innerHTML = '';
 
       let sum = 0;
+
       inputs.forEach((input, idx) => {
-        const deltaDiv = document.createElement('div');
-        deltaDiv.textContent = input.value;
-        const deltaItem = deltas.find(d => d.index === idx);
+        if (!input.value) return;
+        const lap = parseFormatted(input);
+        if (lap === null) return;
 
-        // Only display delta for the top 5 times
-        if (deltaItem) {
-          const delta = deltaItem.lap - refTime;
-          const color = delta > 0 ? 'green' : 'red';
-          const deltaSpan = document.createElement('span');
-          deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
-          deltaSpan.classList.add('delta-text', color);
+        const delta = lap - refTime;
+        const color = delta > 0 ? 'green' : 'red';
+        const deltaDisplay = `${delta > 0 ? '+' : ''}${delta} ms`;
 
-          // Make the best 5 bold
-          if (best5.some(d => d.index === idx)) {
-            deltaSpan.style.fontWeight = 'bold';
-            sum += delta;  // Add delta to the sum only for best 5 times
-          }
+        const isBest = best5Indices.includes(idx);
+        if (isBest) sum += delta;
 
-          deltaDiv.appendChild(deltaSpan);
-        }
+        const div = document.createElement('div');
+        div.innerHTML = isBest
+          ? `<strong>${input.value} <span class="delta-text ${color}">${deltaDisplay}</span></strong>`
+          : `${input.value} <span class="delta-text ${color}">${deltaDisplay}</span>`;
 
-        resultEl.appendChild(deltaDiv);
+        resultEl.appendChild(div);
       });
 
-      // Set the sum only for the best 5
       document.getElementById(`${session}Sum`).textContent = sum;
       sessionSums[session] = sum;
       document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
@@ -243,9 +228,14 @@
     function resetSession(session) {
       document.getElementById(`refTime${session.slice(-1)}`).value = '';
       const container = document.getElementById(`${session}Times`);
-      container.querySelectorAll('input').forEach(input => input.value = '');
+      container.querySelectorAll('input').forEach(input => {
+        input.value = '';
+        delete input.dataset.raw;
+      });
       document.getElementById(`${session}Result`).innerHTML = '';
       document.getElementById(`${session}Sum`).textContent = '-';
+      sessionSums[session] = 0;
+      document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3 || '-';
     }
 
     function resetAll() {
