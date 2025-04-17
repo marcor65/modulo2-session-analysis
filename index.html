@@ -80,6 +80,12 @@
       font-size: 12px;
       color: #ff0000;
     }
+    .delta-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .green { color: green; }
+    .red { color: red; }
     /* Mobile Friendly */
     @media (max-width: 600px) {
       .time-grid {
@@ -200,7 +206,7 @@
         const lap = parseFormatted(input);
         if (lap !== null) {
           const delta = Math.abs(lap - refTime);
-          deltas.push({ index, value: input.value, delta });
+          deltas.push({ index, value: input.value, delta, lap });
         }
       });
 
@@ -214,15 +220,22 @@
       inputs.forEach((input, idx) => {
         const isBest = best5.some(d => d.index === idx);
         input.style.fontWeight = isBest ? 'bold' : 'normal';
-        const div = document.createElement('div');
-        div.textContent = input.value;
+
+        const deltaDiv = document.createElement('div');
+        deltaDiv.textContent = input.value;
         const scartDiv = document.createElement('div');
-        const delta = best5.find(d => d.index === idx)?.delta || 0;
-        scartDiv.textContent = `Delta: ${delta} ms`;
-        scartDiv.classList.add('scart-text');
-        div.appendChild(scartDiv);
-        if (isBest) div.classList.add('highlighted-line');
-        resultEl.appendChild(div);
+
+        const deltaItem = deltas.find(d => d.index === idx);
+        if (deltaItem) {
+          const delta = deltaItem.delta;
+          const color = deltaItem.lap > refTime ? 'green' : 'red';
+          scartDiv.textContent = `Delta: ${delta} ms`;
+          scartDiv.classList.add('delta-text', color);
+          deltaDiv.appendChild(scartDiv);
+        }
+        
+        if (isBest) deltaDiv.classList.add('highlighted-line');
+        resultEl.appendChild(deltaDiv);
       });
 
       best5.forEach(item => sum += item.delta);
