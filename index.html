@@ -72,14 +72,7 @@
     }
     .green { color: green; }
     .red { color: red; }
-    @media (max-width: 600px) {
-      .time-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .section button {
-        width: 100%;
-      }
-    }
+    .bold { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -193,31 +186,31 @@
 
       deltas.sort((a, b) => a.delta - b.delta);
       const best5 = deltas.slice(0, 5);
-      const best5Indices = best5.map(d => d.index);
+      const bestIndices = best5.map(item => item.index);
 
       const resultEl = document.getElementById(`${session}Result`);
       resultEl.innerHTML = '';
 
       let sum = 0;
-
       inputs.forEach((input, idx) => {
-        if (!input.value) return;
-        const lap = parseFormatted(input);
-        if (lap === null) return;
+        const resultLine = document.createElement('div');
+        const deltaItem = deltas.find(d => d.index === idx);
+        if (deltaItem) {
+          const delta = deltaItem.lap - refTime;
+          const color = delta > 0 ? 'green' : 'red';
+          const deltaSpan = document.createElement('span');
+          deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
+          deltaSpan.classList.add('delta-text', color);
 
-        const delta = lap - refTime;
-        const color = delta > 0 ? 'green' : 'red';
-        const deltaDisplay = `${delta > 0 ? '+' : ''}${delta} ms`;
+          if (bestIndices.includes(idx)) {
+            resultLine.classList.add('bold');
+            sum += Math.abs(delta);
+          }
 
-        const isBest = best5Indices.includes(idx);
-        if (isBest) sum += delta;
-
-        const div = document.createElement('div');
-        div.innerHTML = isBest
-          ? `<strong>${input.value} <span class="delta-text ${color}">${deltaDisplay}</span></strong>`
-          : `${input.value} <span class="delta-text ${color}">${deltaDisplay}</span>`;
-
-        resultEl.appendChild(div);
+          resultLine.textContent = input.value;
+          resultLine.appendChild(deltaSpan);
+          resultEl.appendChild(resultLine);
+        }
       });
 
       document.getElementById(`${session}Sum`).textContent = sum;
@@ -228,19 +221,15 @@
     function resetSession(session) {
       document.getElementById(`refTime${session.slice(-1)}`).value = '';
       const container = document.getElementById(`${session}Times`);
-      container.querySelectorAll('input').forEach(input => {
-        input.value = '';
-        delete input.dataset.raw;
-      });
+      container.querySelectorAll('input').forEach(input => input.value = '');
       document.getElementById(`${session}Result`).innerHTML = '';
       document.getElementById(`${session}Sum`).textContent = '-';
       sessionSums[session] = 0;
-      document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3 || '-';
+      document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
     }
 
     function resetAll() {
       ['session2', 'session3'].forEach(resetSession);
-      document.getElementById('totalSum').textContent = '-';
     }
   </script>
 </body>
