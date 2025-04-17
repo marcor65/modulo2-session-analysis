@@ -66,8 +66,8 @@
   <div class="section">
     <h2>Session 2</h2>
     <label>Reference Time (m:ss.mmm):</label>
-    <input id="refTime2" maxlength="7" type="text" placeholder="e.g. 123456" oninput="autoFormat(this)"/>
-    <textarea id="session2Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="processLapStream(this)"></textarea>
+    <input id="refTime2" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime2')"/>
+    <textarea id="session2Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="handleLapInput(this)"></textarea>
     <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
     <div id="session2Result"></div>
     <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
@@ -77,8 +77,8 @@
   <div class="section">
     <h2>Session 3</h2>
     <label>Reference Time (m:ss.mmm):</label>
-    <input id="refTime3" maxlength="7" type="text" placeholder="e.g. 123456" oninput="autoFormat(this)"/>
-    <textarea id="session3Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="processLapStream(this)"></textarea>
+    <input id="refTime3" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime3')"/>
+    <textarea id="session3Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="handleLapInput(this)"></textarea>
     <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
     <div id="session3Result"></div>
     <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
@@ -91,6 +91,36 @@
   </div>
 
   <script>
+    function formatReference(input, id) {
+      let val = input.value.replace(/[^\d]/g, '');
+      if (val.length === 6) {
+        const m = val[0];
+        const s = val.slice(1, 3);
+        const ms = val.slice(3);
+        if (+s > 59) {
+          alert("Seconds must be less than 60");
+          return;
+        }
+        document.getElementById(id).value = `${m}:${s}.${ms}`;
+      }
+    }
+
+    function handleLapInput(textarea) {
+      const raw = textarea.value.replace(/[^\d]/g, '');
+      let formatted = '';
+      for (let i = 0; i < raw.length; i += 6) {
+        const part = raw.slice(i, i + 6);
+        if (part.length === 6) {
+          const m = part[0];
+          const s = part.slice(1, 3);
+          const ms = part.slice(3);
+          if (+s > 59) continue;
+          formatted += `${m}:${s}.${ms}\n`;
+        }
+      }
+      textarea.value = formatted.trim();
+    }
+
     function parseTimeString(timeStr) {
       const match = timeStr.match(/(\d+):(\d{2})\.(\d{3})/);
       if (!match) return null;
@@ -104,33 +134,6 @@
       const sec = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
       const milli = (ms % 1000).toString().padStart(3, '0');
       return `${min}:${sec}.${milli}`;
-    }
-
-    function autoFormat(input) {
-      let val = input.value.replace(/[^\d]/g, '');
-      if (val.length > 6) val = val.slice(0, 6);
-      if (val.length === 6) {
-        const m = val[0];
-        const s = val.slice(1, 3);
-        const ms = val.slice(3);
-        if (+s > 59) return;
-        input.value = `${m}:${s}.${ms}`;
-      }
-    }
-
-    function processLapStream(textarea) {
-      const raw = textarea.value.replace(/[^\d]/g, '');
-      let result = [];
-      for (let i = 0; i < raw.length; i += 6) {
-        const block = raw.slice(i, i + 6);
-        if (block.length === 6) {
-          const m = block[0];
-          const s = block.slice(1, 3);
-          const ms = block.slice(3);
-          if (+s <= 59) result.push(`${m}:${s}.${ms}`);
-        }
-      }
-      textarea.value = result.join('\n');
     }
 
     let sessionSums = { session2: 0, session3: 0 };
