@@ -222,9 +222,9 @@
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
 
-          // Se il tempo è uno dei 5 migliori, mettiamo in grassetto solo nel riepilogo
+          // Evidenziamento in grassetto solo nel riepilogo
           if (best5.some(item => item.index === idx)) {
-            resultLine.style.fontWeight = 'bold'; // evidenziare in grassetto
+            resultLine.style.fontWeight = 'bold'; // evidenziare in grassetto solo nel riepilogo
           }
 
           resultLine.appendChild(lapText);
