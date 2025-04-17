@@ -58,6 +58,12 @@
       font-weight: bold;
       display: block;
     }
+    .instruction-text {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -65,9 +71,10 @@
 
   <div class="section">
     <h2>Session 2</h2>
+    <div class="instruction-text">Insert lap times as a continuous numeric string (e.g. 123456123567...). Max value for seconds: 59.</div>
     <label>Reference Time (m:ss.mmm):</label>
     <input id="refTime2" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime2')"/>
-    <textarea id="session2Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="handleLapInput(this)"></textarea>
+    <textarea id="session2Times" rows="5" placeholder="Enter lap times (e.g. 123456123567...)" oninput="handleLapInput(this)"></textarea>
     <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
     <div id="session2Result"></div>
     <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
@@ -76,9 +83,10 @@
 
   <div class="section">
     <h2>Session 3</h2>
+    <div class="instruction-text">Insert lap times as a continuous numeric string (e.g. 123456123567...). Max value for seconds: 59.</div>
     <label>Reference Time (m:ss.mmm):</label>
     <input id="refTime3" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime3')"/>
-    <textarea id="session3Times" rows="5" placeholder="Enter lap times (e.g. 123456)" oninput="handleLapInput(this)"></textarea>
+    <textarea id="session3Times" rows="5" placeholder="Enter lap times (e.g. 123456123567...)" oninput="handleLapInput(this)"></textarea>
     <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
     <div id="session3Result"></div>
     <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
