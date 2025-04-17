@@ -211,9 +211,6 @@
       inputs.forEach((input, idx) => {
         const lap = parseFormatted(input);
         if (lap !== null) {
-          const isBest = best5.some(d => d.index === idx);
-          input.style.fontWeight = isBest ? 'bold' : 'normal';
-
           const delta = lap - refTime;
           const color = delta > 0 ? 'green' : 'red';
 
@@ -225,20 +222,19 @@
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
 
-          // Se il tempo è uno dei 5 migliori, mettiamo in grassetto
-          if (isBest) {
-            resultLine.style.fontWeight = 'bold';
+          // Se il tempo è uno dei 5 migliori, mettiamo in grassetto solo nel riepilogo
+          if (best5.some(item => item.index === idx)) {
+            resultLine.style.fontWeight = 'bold'; // evidenziare in grassetto
           }
 
           resultLine.appendChild(lapText);
           resultLine.appendChild(deltaSpan);
           resultEl.appendChild(resultLine);
-        } else {
-          input.style.fontWeight = 'normal'; // reset in caso di campo vuoto
+
+          sum += Math.abs(delta);
         }
       });
 
-      best5.forEach(item => sum += item.delta);
       document.getElementById(`${session}Sum`).textContent = sum;
       sessionSums[session] = sum;
       document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
