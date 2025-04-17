@@ -12,7 +12,7 @@
       color: #000;
       padding: 20px;
     }
-    input, button, select {
+    input, button {
       padding: 10px;
       margin: 5px 0;
       background: #fff;
@@ -20,14 +20,15 @@
       width: 100%;
       font-size: 16px;
     }
-    textarea {
-      padding: 10px;
-      margin: 5px 0;
-      background: #fff;
-      border: 1px solid #ccc;
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 5px;
+    }
+    .time-grid input {
       width: 100%;
+      text-align: center;
       font-family: monospace;
-      font-size: 14px;
     }
     h1, h2 {
       margin-top: 30px;
@@ -71,10 +72,10 @@
 
   <div class="section">
     <h2>Session 2</h2>
-    <div class="instruction-text">Insert lap times as a continuous numeric string (e.g. 123456123567...). Max value for seconds: 59.</div>
-    <label>Reference Time (m:ss.mmm):</label>
-    <input id="refTime2" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime2')"/>
-    <textarea id="session2Times" rows="5" placeholder="Enter lap times (e.g. 123456123567...)" oninput="handleLapInput(this)"></textarea>
+    <div class="instruction-text">Enter up to 20 lap times in 6-digit format (e.g. 123456 = 1:23.456). Seconds max: 59</div>
+    <label>Reference Time (mssmmm):</label>
+    <input id="refTime2" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
+    <div id="session2Times" class="time-grid"></div>
     <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
     <div id="session2Result"></div>
     <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
@@ -83,10 +84,10 @@
 
   <div class="section">
     <h2>Session 3</h2>
-    <div class="instruction-text">Insert lap times as a continuous numeric string (e.g. 123456123567...). Max value for seconds: 59.</div>
-    <label>Reference Time (m:ss.mmm):</label>
-    <input id="refTime3" maxlength="6" type="text" placeholder="e.g. 123456" oninput="formatReference(this, 'refTime3')"/>
-    <textarea id="session3Times" rows="5" placeholder="Enter lap times (e.g. 123456123567...)" oninput="handleLapInput(this)"></textarea>
+    <div class="instruction-text">Enter up to 20 lap times in 6-digit format (e.g. 123456 = 1:23.456). Seconds max: 59</div>
+    <label>Reference Time (mssmmm):</label>
+    <input id="refTime3" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
+    <div id="session3Times" class="time-grid"></div>
     <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
     <div id="session3Result"></div>
     <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
@@ -99,42 +100,35 @@
   </div>
 
   <script>
-    function formatReference(input, id) {
-      let val = input.value.replace(/[^\d]/g, '');
+    function formatInput(el) {
+      let val = el.value.replace(/\D/g, '').slice(0, 6);
       if (val.length === 6) {
         const m = val[0];
-        const s = val.slice(1, 3);
-        const ms = val.slice(3);
-        if (+s > 59) {
-          alert("Seconds must be less than 60");
-          return;
+        const ss = val.slice(1, 3);
+        const mmm = val.slice(3);
+        if (parseInt(ss) > 59) {
+          el.value = '';
+          alert('Seconds cannot exceed 59');
+        } else {
+          el.dataset.raw = val;
+          el.value = `${m}:${ss}.${mmm}`;
         }
-        document.getElementById(id).value = `${m}:${s}.${ms}`;
+      } else {
+        el.dataset.raw = val;
       }
     }
 
-    function handleLapInput(textarea) {
-      const raw = textarea.value.replace(/[^\d]/g, '');
-      let formatted = '';
-      for (let i = 0; i < raw.length; i += 6) {
-        const part = raw.slice(i, i + 6);
-        if (part.length === 6) {
-          const m = part[0];
-          const s = part.slice(1, 3);
-          const ms = part.slice(3);
-          if (+s > 59) continue;
-          formatted += `${m}:${s}.${ms}\n`;
-        }
-      }
-      textarea.value = formatted.trim();
+    function parseFormatted(input) {
+      return parseTimeString(input.dataset.raw);
     }
 
-    function parseTimeString(timeStr) {
-      const match = timeStr.match(/(\d+):(\d{2})\.(\d{3})/);
-      if (!match) return null;
-      const [_, min, sec, ms] = match;
-      if (+sec > 59) return null;
-      return (+min * 60 + +sec) * 1000 + +ms;
+    function parseTimeString(raw) {
+      if (!raw || raw.length !== 6) return null;
+      const m = +raw[0];
+      const s = +raw.slice(1,3);
+      const ms = +raw.slice(3);
+      if (s > 59) return null;
+      return (m * 60 + s) * 1000 + ms;
     }
 
     function formatMs(ms) {
@@ -146,36 +140,49 @@
 
     let sessionSums = { session2: 0, session3: 0 };
 
+    ['session2', 'session3'].forEach(session => {
+      const container = document.getElementById(`${session}Times`);
+      for (let i = 0; i < 20; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = 6;
+        input.placeholder = `Lap ${i + 1}`;
+        input.oninput = () => formatInput(input);
+        container.appendChild(input);
+      }
+    });
+
     function processTimes(session) {
       const refInput = document.getElementById(`refTime${session.slice(-1)}`);
-      const refTime = parseTimeString(refInput.value);
-      if (refTime === null) return alert("Invalid reference time format or seconds > 59. Use m:ss.mmm");
+      const refTime = parseFormatted(refInput);
+      if (refTime === null) return alert("Invalid reference time. Use 6-digit format (e.g. 123456)");
 
-      const textArea = document.getElementById(`${session}Times`);
-      const lines = textArea.value.trim().split('\n');
+      const container = document.getElementById(`${session}Times`);
+      const inputs = container.querySelectorAll('input');
       const deltas = [];
 
-      lines.forEach((line, index) => {
-        const lap = parseTimeString(line);
+      inputs.forEach((input, index) => {
+        const lap = parseFormatted(input);
         if (lap !== null) {
           const delta = Math.abs(lap - refTime);
-          deltas.push({ index, line, delta });
+          deltas.push({ index, value: input.value, delta });
         }
       });
 
       deltas.sort((a, b) => a.delta - b.delta);
       const best5 = deltas.slice(0, 5);
 
-      const listEl = document.getElementById(`${session}Result`);
-      listEl.innerHTML = '';
+      const resultEl = document.getElementById(`${session}Result`);
+      resultEl.innerHTML = '';
 
       let sum = 0;
-      lines.forEach((line, idx) => {
+      inputs.forEach((input, idx) => {
         const isBest = best5.some(d => d.index === idx);
+        input.style.fontWeight = isBest ? 'bold' : 'normal';
         const div = document.createElement('div');
-        div.textContent = line;
+        div.textContent = input.value;
         if (isBest) div.classList.add('highlighted-line');
-        listEl.appendChild(div);
+        resultEl.appendChild(div);
       });
 
       best5.forEach(item => sum += item.delta);
@@ -204,11 +211,6 @@
       const btn = document.getElementById(`btn${session.slice(-1)}`);
       btn.classList.remove('analyze');
       btn.classList.add('analyzed');
-
-      textArea.oninput = () => {
-        btn.classList.remove('analyzed');
-        btn.classList.add('analyze');
-      };
     }
   </script>
 </body>
