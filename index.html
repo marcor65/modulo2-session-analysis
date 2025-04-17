@@ -76,17 +76,12 @@
       margin-bottom: 5px;
       font-style: italic;
     }
-    .scart-text {
-      font-size: 12px;
-      color: #ff0000;
-    }
     .delta-text {
       font-size: 12px;
       font-weight: bold;
     }
     .green { color: green; }
     .red { color: red; }
-    /* Mobile Friendly */
     @media (max-width: 600px) {
       .time-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -103,40 +98,36 @@
   <div class="section">
     <h2>Session 2</h2>
     <div class="reference-time-container">
-      <div class="instruction-text">Enter the reference lap time (m:ss.mmm) for Session 2.</div>
       <label>Reference Time (mssmmm):</label>
       <input id="refTime2" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
     </div>
     <div class="lap-time-container">
-      <div class="instruction-text">Enter up to 20 lap times (m:ss.mmm) for Session 2.</div>
       <div id="session2Times" class="time-grid"></div>
     </div>
-    <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
+    <button onclick="processTimes('session2')">ANALYZE SESSION 2</button>
     <button class="reset" onclick="resetSession('session2')">RESET SESSION</button>
     <div id="session2Result"></div>
-    <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
+    <p>Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
   </div>
 
   <div class="section">
     <h2>Session 3</h2>
     <div class="reference-time-container">
-      <div class="instruction-text">Enter the reference lap time (m:ss.mmm) for Session 3.</div>
       <label>Reference Time (mssmmm):</label>
       <input id="refTime3" type="text" maxlength="6" oninput="formatInput(this)" placeholder="e.g. 123456"/>
     </div>
     <div class="lap-time-container">
-      <div class="instruction-text">Enter up to 20 lap times (m:ss.mmm) for Session 3.</div>
       <div id="session3Times" class="time-grid"></div>
     </div>
-    <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
+    <button onclick="processTimes('session3')">ANALYZE SESSION 3</button>
     <button class="reset" onclick="resetSession('session3')">RESET SESSION</button>
     <div id="session3Result"></div>
-    <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
+    <p>Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
   </div>
 
   <div class="section">
     <h2>Final Results</h2>
-    <p class="result-label">Total Delta (Session 2 + 3): <span id="totalSum">-</span> ms</p>
+    <p>Total Delta (Session 2 + 3): <span id="totalSum">-</span> ms</p>
     <button class="reset" onclick="resetAll()">RESET ALL</button>
   </div>
 
@@ -223,18 +214,16 @@
 
         const deltaDiv = document.createElement('div');
         deltaDiv.textContent = input.value;
-        const scartDiv = document.createElement('div');
-
         const deltaItem = deltas.find(d => d.index === idx);
         if (deltaItem) {
-          const delta = deltaItem.delta;
-          const color = deltaItem.lap > refTime ? 'green' : 'red';
-          scartDiv.textContent = `Delta: ${delta} ms`;
-          scartDiv.classList.add('delta-text', color);
-          deltaDiv.appendChild(scartDiv);
+          const delta = deltaItem.lap - refTime;
+          const color = delta > 0 ? 'green' : 'red';
+          const deltaSpan = document.createElement('span');
+          deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
+          deltaSpan.classList.add('delta-text', color);
+          deltaDiv.appendChild(deltaSpan);
         }
-        
-        if (isBest) deltaDiv.classList.add('highlighted-line');
+
         resultEl.appendChild(deltaDiv);
       });
 
