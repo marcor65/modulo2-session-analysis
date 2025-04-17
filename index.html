@@ -225,6 +225,7 @@
           // Make the best 5 bold
           if (best5.some(d => d.index === idx)) {
             deltaSpan.style.fontWeight = 'bold';
+            sum += delta;  // Add delta to the sum only for best 5 times
           }
 
           deltaDiv.appendChild(deltaSpan);
@@ -233,8 +234,7 @@
         resultEl.appendChild(deltaDiv);
       });
 
-      // Sum of deltas for only the best 5
-      best5.forEach(item => sum += item.delta);
+      // Set the sum only for the best 5
       document.getElementById(`${session}Sum`).textContent = sum;
       sessionSums[session] = sum;
       document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
