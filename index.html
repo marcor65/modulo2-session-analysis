@@ -225,6 +225,11 @@
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
 
+          // Se il tempo è uno dei 5 migliori, mettiamo in grassetto
+          if (isBest) {
+            resultLine.style.fontWeight = 'bold';
+          }
+
           resultLine.appendChild(lapText);
           resultLine.appendChild(deltaSpan);
           resultEl.appendChild(resultLine);
