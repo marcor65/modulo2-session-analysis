@@ -205,26 +205,32 @@
       const best5 = deltas.slice(0, 5);
 
       const resultEl = document.getElementById(`${session}Result`);
-      resultEl.innerHTML = '';
+      resultEl.innerHTML = ''; // reset precedente output
 
       let sum = 0;
       inputs.forEach((input, idx) => {
-        const isBest = best5.some(d => d.index === idx);
-        input.style.fontWeight = isBest ? 'bold' : 'normal';
+        const lap = parseFormatted(input);
+        if (lap !== null) {
+          const isBest = best5.some(d => d.index === idx);
+          input.style.fontWeight = isBest ? 'bold' : 'normal';
 
-        const deltaDiv = document.createElement('div');
-        deltaDiv.textContent = input.value;
-        const deltaItem = deltas.find(d => d.index === idx);
-        if (deltaItem) {
-          const delta = deltaItem.lap - refTime;
+          const delta = lap - refTime;
           const color = delta > 0 ? 'green' : 'red';
+
+          const resultLine = document.createElement('div');
+          resultLine.classList.add('highlighted-line');
+
+          const lapText = document.createTextNode(`${input.value}`);
           const deltaSpan = document.createElement('span');
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
-          deltaDiv.appendChild(deltaSpan);
-        }
 
-        resultEl.appendChild(deltaDiv);
+          resultLine.appendChild(lapText);
+          resultLine.appendChild(deltaSpan);
+          resultEl.appendChild(resultLine);
+        } else {
+          input.style.fontWeight = 'normal'; // reset in caso di campo vuoto
+        }
       });
 
       best5.forEach(item => sum += item.delta);
