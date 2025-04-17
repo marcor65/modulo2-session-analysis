@@ -64,11 +64,9 @@
 
   <div class="section">
     <h2>Session 2</h2>
-    <label>Reference Time:</label>
-    <input id="refMin2" type="number" min="0" placeholder="Min" />
-    <input id="refSec2" type="number" min="0" max="59" placeholder="Sec" />
-    <input id="refMs2" type="number" min="0" max="999" placeholder="Ms" />
-    <textarea id="session2Times" rows="5" placeholder="Enter lap times (m ss mmm)"></textarea>
+    <label>Reference Time (m:ss.mmm):</label>
+    <input id="refTime2" type="text" placeholder="e.g. 1:23.456" oninput="validateFormat(this)"/>
+    <textarea id="session2Times" rows="5" placeholder="Enter lap times (m:ss.mmm)" oninput="validateTextarea(this)"></textarea>
     <button id="btn2" class="analyze" onclick="processTimes('session2')">ANALYZE SESSION 2</button>
     <ul id="session2Result"></ul>
     <p class="result-label">Session 2 Delta Sum: <span id="session2Sum">-</span> ms</p>
@@ -77,11 +75,9 @@
 
   <div class="section">
     <h2>Session 3</h2>
-    <label>Reference Time:</label>
-    <input id="refMin3" type="number" min="0" placeholder="Min" />
-    <input id="refSec3" type="number" min="0" max="59" placeholder="Sec" />
-    <input id="refMs3" type="number" min="0" max="999" placeholder="Ms" />
-    <textarea id="session3Times" rows="5" placeholder="Enter lap times (m ss mmm)"></textarea>
+    <label>Reference Time (m:ss.mmm):</label>
+    <input id="refTime3" type="text" placeholder="e.g. 1:23.456" oninput="validateFormat(this)"/>
+    <textarea id="session3Times" rows="5" placeholder="Enter lap times (m:ss.mmm)" oninput="validateTextarea(this)"></textarea>
     <button id="btn3" class="analyze" onclick="processTimes('session3')">ANALYZE SESSION 3</button>
     <ul id="session3Result"></ul>
     <p class="result-label">Session 3 Delta Sum: <span id="session3Sum">-</span> ms</p>
@@ -94,7 +90,10 @@
   </div>
 
   <script>
-    function formatTime(min, sec, ms) {
+    function parseTimeString(timeStr) {
+      const match = timeStr.match(/(\d+):(\d{2})\.(\d{3})/);
+      if (!match) return null;
+      const [_, min, sec, ms] = match;
       return (+min * 60 + +sec) * 1000 + +ms;
     }
 
@@ -105,28 +104,27 @@
       return `${min}:${sec}.${milli}`;
     }
 
-    function parseLine(line) {
-      const parts = line.trim().split(/\s+/);
-      if (parts.length !== 3) return null;
-      const [min, sec, ms] = parts.map(n => parseInt(n));
-      return formatTime(min, sec, ms);
+    function validateFormat(input) {
+      input.value = input.value.replace(/[^\d:\.]/g, '');
+    }
+
+    function validateTextarea(textarea) {
+      textarea.value = textarea.value.replace(/[^\d:\.\n]/g, '');
     }
 
     let sessionSums = { session2: 0, session3: 0 };
 
     function processTimes(session) {
-      const refMin = document.getElementById(`refMin${session.slice(-1)}`).value;
-      const refSec = document.getElementById(`refSec${session.slice(-1)}`).value;
-      const refMs = document.getElementById(`refMs${session.slice(-1)}`).value;
-      const refTime = formatTime(refMin, refSec, refMs);
+      const refInput = document.getElementById(`refTime${session.slice(-1)}`);
+      const refTime = parseTimeString(refInput.value);
+      if (refTime === null) return alert("Invalid reference time format. Use m:ss.mmm");
 
       const textArea = document.getElementById(`${session}Times`);
       const lines = textArea.value.trim().split('\n');
       const deltas = [];
-      const cleanLines = [];
 
       lines.forEach((line, index) => {
-        const lap = parseLine(line);
+        const lap = parseTimeString(line);
         if (lap !== null) {
           const delta = Math.abs(lap - refTime);
           deltas.push({ index, line, delta });
