@@ -195,7 +195,7 @@
       window[`chart${session}`] = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: best5.map((_, i) => `Lap ${i + 1}`),
+          labels: best5.map(d => `Lap ${d.index + 1}`),
           datasets: [{
             label: 'Delta (ms)',
             backgroundColor: '#0077cc',
