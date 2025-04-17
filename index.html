@@ -67,11 +67,8 @@
       margin-top: 10px;
     }
     .highlighted-line {
-      font-weight: normal;
-      display: block;
-    }
-    .highlighted-line.bold {
       font-weight: bold;
+      display: block;
     }
     .instruction-text {
       font-size: 14px;
@@ -204,40 +201,40 @@
         }
       });
 
+      // Sort by delta and take the best 5
       deltas.sort((a, b) => a.delta - b.delta);
-      const best5 = deltas.slice(0, 5); // I migliori 5 tempi da evidenziare
+      const best5 = deltas.slice(0, 5);
 
       const resultEl = document.getElementById(`${session}Result`);
-      resultEl.innerHTML = ''; // reset precedente output
+      resultEl.innerHTML = '';
 
       let sum = 0;
       inputs.forEach((input, idx) => {
-        const lap = parseFormatted(input);
-        if (lap !== null) {
-          const delta = lap - refTime;
+        const deltaDiv = document.createElement('div');
+        deltaDiv.textContent = input.value;
+        const deltaItem = deltas.find(d => d.index === idx);
+
+        // Only display delta for the top 5 times
+        if (deltaItem) {
+          const delta = deltaItem.lap - refTime;
           const color = delta > 0 ? 'green' : 'red';
-
-          const resultLine = document.createElement('div');
-          resultLine.classList.add('highlighted-line');
-
-          const lapText = document.createTextNode(`${input.value}`);
           const deltaSpan = document.createElement('span');
           deltaSpan.textContent = ` (${delta > 0 ? '+' : ''}${delta} ms)`;
           deltaSpan.classList.add('delta-text', color);
 
-          // Evidenzio in grassetto solo i 5 migliori tempi
-          if (best5.some(item => item.index === idx)) {
-            resultLine.classList.add('bold'); // evidenzio in grassetto solo i 5 migliori tempi
+          // Make the best 5 bold
+          if (best5.some(d => d.index === idx)) {
+            deltaSpan.style.fontWeight = 'bold';
           }
 
-          resultLine.appendChild(lapText);
-          resultLine.appendChild(deltaSpan);
-          resultEl.appendChild(resultLine);
-
-          sum += Math.abs(delta);
+          deltaDiv.appendChild(deltaSpan);
         }
+
+        resultEl.appendChild(deltaDiv);
       });
 
+      // Sum of deltas for only the best 5
+      best5.forEach(item => sum += item.delta);
       document.getElementById(`${session}Sum`).textContent = sum;
       sessionSums[session] = sum;
       document.getElementById('totalSum').textContent = sessionSums.session2 + sessionSums.session3;
